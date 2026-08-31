@@ -73,7 +73,7 @@ jobs:
           path: site/firmware/*.bin
 
       - uses: actions/upload-pages-artifact@v5
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           path: site
 
@@ -84,7 +84,7 @@ jobs:
           generate_release_notes: true
 
   deploy-pages:
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     environment:
