@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "schedule:weekly"
+  ],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "matchDepNames": ["esphome"],
+      "commitMessageTopic": "ESPHome",
+      "prBodyNotes": [
+        "Check before merging: the template `min_version` (zehnder-comfoair-rf.yaml) must stay at or below this version, and a tag build with this version must compile."
+      ]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [".github/workflows/release.yml"],
+      "matchStrings": ["esphome==(?<currentValue>[0-9][0-9.]*[0-9])"],
+      "depNameTemplate": "esphome",
+      "datasourceTemplate": "pypi"
+    }
+  ]
+}

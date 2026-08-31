@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,23 +10,142 @@
   h1{font-size:1.7rem;margin:0 0 1rem}
   code{background:#eaf3f7;padding:.1rem .35rem;border-radius:3px}
   a{color:#0d6e8f}
+
+  /* Warning block. The "Important:" label carries the meaning as text,
+     so the block does not rely on colour alone. */
+  .warn{background:#fdf4e3;border-left:4px solid #8a5a00;padding:1rem 1.25rem;margin:0 0 1.5rem}
+  .warn p{margin:0}
+  .warn strong{color:#8a5a00}
+
+  /* Language switch. Only the inactive language is hidden, so the page still
+     shows English (the source default) when JavaScript does not run.
+     display:none keeps the hidden copy out of the accessibility tree. */
+  html[data-lang="nl"] [data-lang="en"],
+  html[data-lang="en"] [data-lang="nl"]{display:none}
+
+  .langbar{display:flex;justify-content:flex-end;margin:-1.25rem 0 1rem}
+  .langswitch{display:flex;align-items:center;gap:.1rem}
+  .langswitch button{font:inherit;font-size:.8125rem;font-weight:600;letter-spacing:.03em;
+    min-width:2.75rem;min-height:2.75rem;padding:0 .4rem;border:0;border-radius:4px;
+    background:none;color:#5d6e78;cursor:pointer}
+  /* Active state is not colour alone: it also gets a tint and an underline. */
+  .langswitch button[aria-pressed="true"]{color:#0d6e8f;background:#eaf3f7;
+    text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+  .langswitch button[aria-pressed="false"]:hover{color:#1d2a33}
+  .langswitch button:focus-visible{outline:2px solid #0d6e8f;outline-offset:2px}
+  .langswitch .sep{color:#c9d6dd}
 </style>
+<script>
+(function(){
+  var KEY='zcr-lang';
+  var TITLES={
+    nl:'Zehnder ComfoAir controller verbonden',
+    en:'Zehnder ComfoAir controller connected'
+  };
+  var GROUP={nl:'Taal',en:'Language'};
+  var WHO={
+    nl:{named:'Apparaat ',at:' op ',anon:'Apparaat op '},
+    en:{named:'Device ',at:' at ',anon:'Device at '}
+  };
+
+  var q=new URLSearchParams(location.search);
+  var n=q.get('name'),ip=q.get('ip');
+
+  function stored(){
+    try{var v=localStorage.getItem(KEY);return (v==='nl'||v==='en')?v:null}catch(e){return null}
+  }
+  /* English is the default. A browser that lists Dutch anywhere in its preferences gets Dutch. */
+  function detect(){
+    var list=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||''];
+    for(var i=0;i<list.length;i++){
+      if(String(list[i]).toLowerCase().indexOf('nl')===0){return 'nl'}
+    }
+    return 'en';
+  }
+  function code(text){
+    var el=document.createElement('code');
+    el.textContent=text; /* textContent, so a crafted query string cannot inject markup */
+    return el;
+  }
+  function renderWho(lang){
+    var el=document.getElementById('who');
+    if(!el){return}
+    while(el.firstChild){el.removeChild(el.firstChild)}
+    if(!n&&!ip){return}
+    var t=WHO[lang];
+    if(n){
+      el.appendChild(document.createTextNode(t.named));
+      el.appendChild(code(n));
+      if(ip){el.appendChild(document.createTextNode(t.at));el.appendChild(code(ip))}
+    }else{
+      el.appendChild(document.createTextNode(t.anon));
+      el.appendChild(code(ip));
+    }
+    el.appendChild(document.createTextNode('.'));
+  }
+  function apply(lang){
+    var d=document.documentElement;
+    d.lang=lang;
+    d.setAttribute('data-lang',lang);
+    document.title=TITLES[lang];
+    var group=document.getElementById('langgroup');
+    if(group){group.setAttribute('aria-label',GROUP[lang])}
+    var btns=document.querySelectorAll('[data-set-lang]');
+    for(var j=0;j<btns.length;j++){
+      btns[j].setAttribute('aria-pressed',btns[j].getAttribute('data-set-lang')===lang?'true':'false');
+    }
+    renderWho(lang);
+  }
+
+  var current=stored()||detect();
+  apply(current);
+
+  document.addEventListener('DOMContentLoaded',function(){
+    apply(current);
+    var btns=document.querySelectorAll('[data-set-lang]');
+    for(var k=0;k<btns.length;k++){
+      btns[k].addEventListener('click',function(){
+        current=this.getAttribute('data-set-lang');
+        try{localStorage.setItem(KEY,current)}catch(e){}
+        apply(current);
+      });
+    }
+  });
+})();
+</script>
 </head>
 <body>
 <main>
-  <h1>The board is on your Wi-Fi</h1>
+  <div class="langbar">
+    <div class="langswitch" id="langgroup" role="group" aria-label="Language">
+      <button type="button" data-set-lang="nl" aria-pressed="false">NL</button>
+      <span class="sep" aria-hidden="true">|</span>
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+    </div>
+  </div>
+
+  <h1 data-lang="nl" lang="nl">Het board zit op je wifi</h1>
+  <h1 data-lang="en" lang="en">The board is on your Wi-Fi</h1>
+
   <p id="who"></p>
-  <ol>
+
+  <div class="warn">
+    <p data-lang="nl" lang="nl"><strong>Belangrijk:</strong> het bereik van de radio is erg klein. Leg deze unit bovenop je Zehnder WTW-unit, zo dicht mogelijk bij het display.</p>
+    <p data-lang="en" lang="en"><strong>Important:</strong> the radio range is very short. Place this unit on top of your Zehnder ventilation unit, as close to its display panel as possible.</p>
+  </div>
+
+  <ol data-lang="nl" lang="nl">
+    <li>Open Home Assistant → Instellingen → Apparaten &amp; diensten. Daar staat een nieuw ESPHome apparaat. Voeg het toe.</li>
+    <li>Open het ESPHome dashboard en kies <em>Adopt</em> bij het gevonden apparaat.</li>
+    <li>Zet de ventilatiestand met de selector <em>Fan speed</em> op de apparaatpagina.</li>
+  </ol>
+  <ol data-lang="en" lang="en">
     <li>Open Home Assistant → Settings → Devices &amp; services. It shows a new ESPHome device; add it.</li>
     <li>Open the ESPHome dashboard, choose <em>Adopt</em> on the discovered device.</li>
     <li>Set fan speed with the <em>Fan speed</em> selector on the device page.</li>
   </ol>
-  <p><a href="https://my.home-assistant.io/redirect/config_flow_start?domain=esphome">Open the Home Assistant setup flow</a></p>
+
+  <p><a data-lang="nl" lang="nl" href="https://my.home-assistant.io/redirect/config_flow_start?domain=esphome">Open de Home Assistant setup</a><a data-lang="en" lang="en" href="https://my.home-assistant.io/redirect/config_flow_start?domain=esphome">Open the Home Assistant setup flow</a></p>
 </main>
-<script>
-  const q=new URLSearchParams(location.search);
-  const n=q.get('name'),ip=q.get('ip');
-  if(n||ip){document.getElementById('who').innerHTML='Device <code>'+(n||'')+'</code>'+(ip?' at <code>'+ip+'</code>':'')+'.';}
-</script>
 </body>
 </html>

@@ -12,6 +12,10 @@ Hardware: https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assista
 
 ## Set up (preprogrammed board)
 
+**Placement matters:** the nRF905 radio range is very short. Place the board on top of
+your Zehnder ventilation unit, as close to its display panel as possible. Elsewhere in
+the house it will likely not reach the unit.
+
 1. Power the board. Wait 10 seconds.
 2. Open the Home Assistant app → Settings → Devices & services. The board appears as
    **Zehnder ComfoAir**. Tap it and enter your Wi-Fi.

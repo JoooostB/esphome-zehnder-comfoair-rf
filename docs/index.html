@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Install the Zehnder ComfoAir RF controller</title>
 <style>
-  :root{--ink:#1d2a33;--mute:#5d6e78;--line:#c9d6dd;--air:#eaf3f7;--act:#0d6e8f}
+  :root{--ink:#1d2a33;--mute:#5d6e78;--line:#c9d6dd;--air:#eaf3f7;--act:#0d6e8f;
+        --warn:#8a5a00;--warnbg:#fdf4e3}
   *{box-sizing:border-box}
   body{margin:0;font:17px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#fff}
   main{max-width:38rem;margin:0 auto;padding:3rem 1.25rem 4rem}
@@ -15,19 +16,108 @@
   li{margin:.35rem 0}
   .flash{background:var(--air);border-left:4px solid var(--act);padding:1.25rem 1.25rem 1rem;margin:0 0 2rem}
   .flash p{margin:0 0 .75rem}
+  /* Warning block: same accent-block shape as .flash, warm accent to set it apart.
+     The "Important:" label carries the meaning as text, so it does not rely on colour. */
+  .warn{background:var(--warnbg);border-left:4px solid var(--warn);padding:1rem 1.25rem;margin:0 0 2rem}
+  .warn p{margin:0}
+  .warn strong{color:var(--warn)}
   esp-web-install-button{--esp-tools-button-color:var(--act);--esp-tools-button-text-color:#fff;--esp-tools-button-border-radius:4px}
   small{color:var(--mute)}
   a{color:var(--act)}
   h2{font-size:1.1rem;margin:2rem 0 .5rem}
+
+  /* Language switch. Only the inactive language is hidden, so the page still
+     shows English (the source default) when JavaScript does not run.
+     display:none keeps the hidden copy out of the accessibility tree. */
+  html[data-lang="nl"] [data-lang="en"],
+  html[data-lang="en"] [data-lang="nl"]{display:none}
+
+  .langbar{display:flex;justify-content:flex-end;margin:-1.25rem 0 1rem}
+  .langswitch{display:flex;align-items:center;gap:.1rem}
+  .langswitch button{font:inherit;font-size:.8125rem;font-weight:600;letter-spacing:.03em;
+    min-width:2.75rem;min-height:2.75rem;padding:0 .4rem;border:0;border-radius:4px;
+    background:none;color:var(--mute);cursor:pointer}
+  /* Active state is not colour alone: it also gets a tint and an underline. */
+  .langswitch button[aria-pressed="true"]{color:var(--act);background:var(--air);
+    text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+  .langswitch button[aria-pressed="false"]:hover{color:var(--ink)}
+  .langswitch button:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+  .langswitch .sep{color:var(--line)}
 </style>
+<script>
+(function(){
+  var KEY='zcr-lang';
+  var TITLES={
+    nl:'Firmware installeren voor de Zehnder ComfoAir controller',
+    en:'Install the Zehnder ComfoAir RF controller'
+  };
+  var GROUP={nl:'Taal',en:'Language'};
+
+  function stored(){
+    try{var v=localStorage.getItem(KEY);return (v==='nl'||v==='en')?v:null}catch(e){return null}
+  }
+  /* English is the default. A browser that lists Dutch anywhere in its preferences gets Dutch. */
+  function detect(){
+    var list=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||''];
+    for(var i=0;i<list.length;i++){
+      if(String(list[i]).toLowerCase().indexOf('nl')===0){return 'nl'}
+    }
+    return 'en';
+  }
+  function apply(lang){
+    var d=document.documentElement;
+    d.lang=lang;
+    d.setAttribute('data-lang',lang);
+    document.title=TITLES[lang];
+    var group=document.getElementById('langgroup');
+    if(group){group.setAttribute('aria-label',GROUP[lang])}
+    var btns=document.querySelectorAll('[data-set-lang]');
+    for(var j=0;j<btns.length;j++){
+      btns[j].setAttribute('aria-pressed',btns[j].getAttribute('data-set-lang')===lang?'true':'false');
+    }
+  }
+
+  var current=stored()||detect();
+  apply(current);
+
+  document.addEventListener('DOMContentLoaded',function(){
+    apply(current);
+    var btns=document.querySelectorAll('[data-set-lang]');
+    for(var k=0;k<btns.length;k++){
+      btns[k].addEventListener('click',function(){
+        current=this.getAttribute('data-set-lang');
+        try{localStorage.setItem(KEY,current)}catch(e){}
+        apply(current);
+      });
+    }
+  });
+})();
+</script>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
 <body>
 <main>
-  <h1>Install the Zehnder ComfoAir controller firmware</h1>
-  <p class="lead">For kits and DIY boards. Preprogrammed boards skip this page: just power them on and open the Home Assistant app.</p>
+  <div class="langbar">
+    <div class="langswitch" id="langgroup" role="group" aria-label="Language">
+      <button type="button" data-set-lang="nl" aria-pressed="false">NL</button>
+      <span class="sep" aria-hidden="true">|</span>
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+    </div>
+  </div>
 
-  <ol>
+  <h1 data-lang="nl" lang="nl">Installeer de firmware voor de Zehnder ComfoAir controller</h1>
+  <h1 data-lang="en" lang="en">Install the Zehnder ComfoAir controller firmware</h1>
+
+  <p class="lead" data-lang="nl" lang="nl">Voor kits en zelfbouwboards. Heb je een voorgeprogrammeerd board? Dan sla je deze pagina over: sluit hem aan en open de Home Assistant app.</p>
+  <p class="lead" data-lang="en" lang="en">For kits and DIY boards. Preprogrammed boards skip this page: just power them on and open the Home Assistant app.</p>
+
+  <ol data-lang="nl" lang="nl">
+    <li>Gebruik Chrome of Edge op een laptop of desktop.</li>
+    <li>Sluit het board aan met een USB-datakabel.</li>
+    <li>Klik op <em>Install</em>, kies de seriële poort en laat het tabblad open staan.</li>
+    <li>Vul je wifigegevens in als daar om gevraagd wordt. Daarna verschijnt het board vanzelf in Home Assistant.</li>
+  </ol>
+  <ol data-lang="en" lang="en">
     <li>Use Chrome or Edge on a laptop or desktop.</li>
     <li>Connect the board with a USB data cable.</li>
     <li>Press <em>Install</em>, pick the serial port, and keep the tab open.</li>
@@ -37,17 +127,41 @@
   <div class="flash">
     <p>Firmware <span id="v">…</span></p>
     <esp-web-install-button manifest="manifest.json">
-      <span slot="unsupported">Your browser can't talk to serial ports. Use Chrome or Edge on a computer.</span>
-      <span slot="not-allowed">Open this page over https.</span>
+      <span slot="unsupported">
+        <span data-lang="nl" lang="nl">Deze browser kan niet bij de seriële poort. Gebruik Chrome of Edge op een computer.</span>
+        <span data-lang="en" lang="en">Your browser can't talk to serial ports. Use Chrome or Edge on a computer.</span>
+      </span>
+      <span slot="not-allowed">
+        <span data-lang="nl" lang="nl">Open deze pagina via https.</span>
+        <span data-lang="en" lang="en">Open this page over https.</span>
+      </span>
     </esp-web-install-button>
   </div>
 
-  <h2>Didn't get a Wi-Fi prompt?</h2>
-  <p>Join the network <code>zehnder-comfoair-xxxxxx</code> from your phone; a setup page opens. The setup window closes ten minutes after power-on; unplug and replug to reopen it.</p>
+  <div class="warn">
+    <p data-lang="nl" lang="nl"><strong>Belangrijk:</strong> het bereik van de radio is erg klein. Leg deze unit bovenop je Zehnder WTW-unit, zo dicht mogelijk bij het display.</p>
+    <p data-lang="en" lang="en"><strong>Important:</strong> the radio range is very short. Place this unit on top of your Zehnder ventilation unit, as close to its display panel as possible.</p>
+  </div>
 
-  <h2>Afterwards</h2>
-  <p>In the ESPHome dashboard, choose <em>Adopt</em> on the discovered device to get updates from this project. Source, pinout and changelog: <a href="https://github.com/JoooostB/esphome-zehnder-comfoair-rf">github.com/JoooostB/esphome-zehnder-comfoair-rf</a>.</p>
-  <p><small>Hardware by JoooostB on <a href="https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assistant-controller/">Tindie</a>. Runs locally; no cloud.</small></p>
+  <h2 data-lang="nl" lang="nl">Geen wifischerm gekregen?</h2>
+  <h2 data-lang="en" lang="en">Didn't get a Wi-Fi prompt?</h2>
+
+  <p data-lang="nl" lang="nl">Verbind je telefoon met het netwerk <code>zehnder-comfoair-xxxxxx</code>. Er opent dan een instelpagina. Dat venster sluit tien minuten na het inschakelen. Haal de stekker eruit en sluit hem weer aan om het opnieuw te openen.</p>
+  <p data-lang="en" lang="en">Join the network <code>zehnder-comfoair-xxxxxx</code> from your phone; a setup page opens. The setup window closes ten minutes after power-on; unplug and replug to reopen it.</p>
+
+  <p data-lang="nl" lang="nl">Blijft hij hangen op "Connecting"? Houd de BOOT-knop op het board ingedrukt terwijl je op <em>Install</em> klikt, laat los zodra het flashen begint.</p>
+  <p data-lang="en" lang="en">Stuck on "Connecting"? Hold the BOOT button on the board while clicking <em>Install</em>, release it once flashing starts.</p>
+
+  <p data-lang="nl" lang="nl">Staat er geen seriële poort in de lijst? Installeer de driver voor de USB-chip van het board (CH340 of CP210x) en sluit hem opnieuw aan.</p>
+  <p data-lang="en" lang="en">No serial port listed? Install the driver for the board's USB chip (CH340 or CP210x) and reconnect.</p>
+
+  <h2 data-lang="nl" lang="nl">Daarna</h2>
+  <h2 data-lang="en" lang="en">Afterwards</h2>
+
+  <p data-lang="nl" lang="nl">Kies in het ESPHome dashboard de knop <em>Adopt</em> bij het gevonden apparaat. Daarna krijg je updates uit dit project. Broncode, pinout en changelog: <a href="https://github.com/JoooostB/esphome-zehnder-comfoair-rf">github.com/JoooostB/esphome-zehnder-comfoair-rf</a>.</p>
+  <p data-lang="en" lang="en">In the ESPHome dashboard, choose <em>Adopt</em> on the discovered device to get updates from this project. Source, pinout and changelog: <a href="https://github.com/JoooostB/esphome-zehnder-comfoair-rf">github.com/JoooostB/esphome-zehnder-comfoair-rf</a>.</p>
+
+  <p><small data-lang="nl" lang="nl">Hardware van JoooostB op <a href="https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assistant-controller/">Tindie</a>. Draait lokaal, zonder cloud.</small><small data-lang="en" lang="en">Hardware by JoooostB on <a href="https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assistant-controller/">Tindie</a>. Runs locally; no cloud.</small></p>
 </main>
 <script>
   fetch('manifest.json').then(r=>r.json()).then(m=>{document.getElementById('v').textContent='v'+m.version}).catch(()=>{});
