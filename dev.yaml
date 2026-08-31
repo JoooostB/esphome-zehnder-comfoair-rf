@@ -1,0 +1,41 @@
+# Local development build: same logic, local components, your own Wi-Fi.
+# Plain YAML merge (<<) so top-level keys here REPLACE the template's; lists are not appended.
+# Never used by buyers. Never referenced from the release template.
+
+<<: !include zehnder-comfoair-rf.yaml
+
+substitutions:
+  name: zehnder-dev
+  friendly_name: Zehnder DEV
+  project_version: "0.0.0-dev"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  project:
+    name: joooostb.zehnder-comfoair-rf
+    version: ${project_version}
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+wifi:
+  power_save_mode: none
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap: {}
+
+# Heap/flash telemetry for the Phase 2 framework decision.
+debug:
+  update_interval: 30s
+sensor:
+  - platform: debug
+    free:
+      name: Heap free
+    block:
+      name: Heap largest block
+  - platform: wifi_signal
+    name: Wi-Fi signal
+    update_interval: 60s

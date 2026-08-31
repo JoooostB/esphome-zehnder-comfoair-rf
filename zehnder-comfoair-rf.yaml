@@ -1,0 +1,225 @@
+# Zehnder ComfoAir RF controller: ESPHome release template
+#
+# This file is fetched by end users' ESPHome dashboards at adoption time (dashboard_import)
+# and used as a remote package. Therefore:
+#   - no secrets, no passwords, no keys, no static IPs, no timezone
+#   - every buyer runs the same bytes; identity comes from the MAC suffix
+#   - bump `project_version` and tag `v<project_version>` together (CI checks this)
+
+substitutions:
+  name: zehnder-comfoair
+  friendly_name: Zehnder ComfoAir
+  project_version: "1.0.0"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  min_version: 2026.8.0
+  project:
+    name: joooostb.zehnder-comfoair-rf
+    version: ${project_version}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf          # Decided 2026-08-31: both frameworks compile; esp-idf is ~42 KB smaller (see HANDOFF item 2)
+
+# UART0 at the default baud rate is what improv_serial listens on; leave baud_rate alone.
+logger:
+  level: INFO
+
+# No key on purpose: the user's dashboard / Home Assistant sets it after adoption.
+api:
+  encryption: {}
+
+ota:
+  - platform: esphome
+
+wifi:
+  power_save_mode: none
+  # Open access point, SSID = device name. Only reachable during the provisioning window.
+  # To require an AP passphrase printed on the label, set wifi.ap.passphrase (see docs)
+  ap: {}
+
+captive_portal:
+
+improv_serial:
+  next_url: https://joooostb.github.io/esphome-zehnder-comfoair-rf/setup.html?name={{device_name}}&ip={{ip_address}}&v={{esphome_version}}
+
+esp32_improv:
+  authorizer: none
+  # The next_url default opens the Home Assistant ESPHome config flow; keep it.
+
+provisioning:
+  timeout: 10min
+  on_timeout:
+    - logger.log: "Setup window closed. Power-cycle the board to reopen it."
+
+dashboard_import:
+  package_import_url: github://JoooostB/esphome-zehnder-comfoair-rf/zehnder-comfoair-rf.yaml@v${project_version}
+  import_full_config: false
+
+# Components come from THIS repo at the same tag. Never point this at a third party.
+external_components:
+  - source: github://JoooostB/esphome-zehnder-comfoair-rf@v${project_version}
+    components: [nrf905, zehnder]
+    refresh: 1d
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# ---------------------------------------------------------------------------
+# Hardware
+# ---------------------------------------------------------------------------
+spi:
+  clk_pin: GPIO14
+  mosi_pin: GPIO13
+  miso_pin: GPIO12
+
+nrf905:
+  id: nrf905_rf
+  cs_pin: GPIO15
+  cd_pin: GPIO33
+  ce_pin: GPIO27
+  pwr_pin: GPIO26
+  txen_pin: GPIO25
+
+fan:
+  - platform: zehnder
+    id: zehnder_fan
+    name: Ventilation
+    nrf905: nrf905_rf
+    update_interval: 60s
+
+# ---------------------------------------------------------------------------
+# Buyer-facing housekeeping
+# ---------------------------------------------------------------------------
+button:
+  - platform: factory_reset
+    name: Factory reset
+    entity_category: config
+  - platform: restart
+    name: Restart
+    entity_category: config
+
+binary_sensor:
+  - platform: status
+    name: Connected
+
+sensor:
+  - platform: wifi_signal
+    name: Wi-Fi signal
+    update_interval: 60s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: version
+    name: Firmware
+    hide_timestamp: true
+    entity_category: diagnostic
+  - platform: wifi_info
+    ip_address:
+      name: IP address
+      entity_category: diagnostic
+
+  # Human-readable timer status
+  - platform: template
+    name: Timer
+    id: timer
+    update_interval: 5s
+    lambda: |-
+      if (id(requested_speed) == 1 || id(countdown_timer) == 0) {
+        return std::string("No timer active");
+      }
+      char buffer[32];
+      snprintf(buffer, sizeof(buffer), "Remaining: %d min", id(countdown_timer));
+      return std::string(buffer);
+
+# ---------------------------------------------------------------------------
+# Speed / timer logic (unchanged behaviour from the proven config)
+# ---------------------------------------------------------------------------
+globals:
+  - id: countdown_timer
+    type: int
+    initial_value: '0'
+  - id: requested_speed
+    type: int
+    initial_value: '1'
+  - id: local_change
+    type: bool
+    initial_value: 'false'
+
+interval:
+  - interval: 60s
+    then:
+      lambda: |-
+        if (id(countdown_timer) > 0) {
+          id(countdown_timer) -= 1;
+          if (id(countdown_timer) == 0) {
+            id(requested_speed) = 1;
+            id(local_change) = true;
+            id(zehnder_fan).setSpeed(1);
+            id(fan_speed_select).publish_state("Speed 1");
+          }
+        }
+
+  - interval: 5s
+    then:
+      lambda: |-
+        int actual_speed = id(zehnder_fan).speed;
+
+        if (id(local_change)) {
+          if (actual_speed != id(requested_speed)) {
+            id(zehnder_fan).setSpeed(id(requested_speed));
+            ESP_LOGW("fan", "Rebroadcasting speed %d due to mismatch", id(requested_speed));
+          } else {
+            id(local_change) = false;
+          }
+        } else if (actual_speed != id(requested_speed)) {
+          id(requested_speed) = actual_speed;
+          if (actual_speed == 1) {
+            id(countdown_timer) = 0;
+            id(fan_speed_select).publish_state("Speed 1");
+            ESP_LOGI("fan", "External change -> Speed 1, no timer");
+          } else if (actual_speed == 2) {
+            id(countdown_timer) = 120;
+            id(fan_speed_select).publish_state("Speed 2");
+            ESP_LOGI("fan", "External change -> Speed 2, 120 min timer");
+          } else if (actual_speed == 3) {
+            id(countdown_timer) = 120;
+            id(fan_speed_select).publish_state("Speed 3");
+            ESP_LOGI("fan", "External change -> Speed 3, 120 min timer");
+          } else {
+            id(countdown_timer) = 0;
+            ESP_LOGW("fan", "External change -> unknown speed %d", actual_speed);
+          }
+        }
+
+select:
+  - platform: template
+    name: Fan speed
+    id: fan_speed_select
+    optimistic: true
+    options:
+      - "Speed 1"
+      - "Speed 2"
+      - "Speed 3"
+      - "High 10 min"
+      - "High 30 min"
+    initial_option: "Speed 1"
+    set_action:
+      - lambda: |-
+          id(local_change) = true;
+          if (x == "Speed 1") {
+            id(requested_speed) = 1; id(zehnder_fan).setSpeed(1);       id(countdown_timer) = 0;
+          } else if (x == "Speed 2") {
+            id(requested_speed) = 2; id(zehnder_fan).setSpeed(2, 120);  id(countdown_timer) = 120;
+          } else if (x == "Speed 3") {
+            id(requested_speed) = 3; id(zehnder_fan).setSpeed(3, 120);  id(countdown_timer) = 120;
+          } else if (x == "High 10 min") {
+            id(requested_speed) = 3; id(zehnder_fan).setSpeed(3, 10);   id(countdown_timer) = 10;
+          } else if (x == "High 30 min") {
+            id(requested_speed) = 3; id(zehnder_fan).setSpeed(3, 30);   id(countdown_timer) = 30;
+          }

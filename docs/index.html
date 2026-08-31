@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install the Zehnder ComfoAir RF controller</title>
+<style>
+  :root{--ink:#1d2a33;--mute:#5d6e78;--line:#c9d6dd;--air:#eaf3f7;--act:#0d6e8f}
+  *{box-sizing:border-box}
+  body{margin:0;font:17px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#fff}
+  main{max-width:38rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+  h1{font-size:1.9rem;line-height:1.15;margin:0 0 .5rem;font-weight:650}
+  p.lead{color:var(--mute);margin:0 0 2rem}
+  ol{padding-left:1.4rem;margin:0 0 2rem}
+  li{margin:.35rem 0}
+  .flash{background:var(--air);border-left:4px solid var(--act);padding:1.25rem 1.25rem 1rem;margin:0 0 2rem}
+  .flash p{margin:0 0 .75rem}
+  esp-web-install-button{--esp-tools-button-color:var(--act);--esp-tools-button-text-color:#fff;--esp-tools-button-border-radius:4px}
+  small{color:var(--mute)}
+  a{color:var(--act)}
+  h2{font-size:1.1rem;margin:2rem 0 .5rem}
+</style>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</head>
+<body>
+<main>
+  <h1>Install the Zehnder ComfoAir controller firmware</h1>
+  <p class="lead">For kits and DIY boards. Preprogrammed boards skip this page: just power them on and open the Home Assistant app.</p>
+
+  <ol>
+    <li>Use Chrome or Edge on a laptop or desktop.</li>
+    <li>Connect the board with a USB data cable.</li>
+    <li>Press <em>Install</em>, pick the serial port, and keep the tab open.</li>
+    <li>When asked, enter your Wi-Fi. The board then shows up in Home Assistant by itself.</li>
+  </ol>
+
+  <div class="flash">
+    <p>Firmware <span id="v">…</span></p>
+    <esp-web-install-button manifest="manifest.json">
+      <span slot="unsupported">Your browser can't talk to serial ports. Use Chrome or Edge on a computer.</span>
+      <span slot="not-allowed">Open this page over https.</span>
+    </esp-web-install-button>
+  </div>
+
+  <h2>Didn't get a Wi-Fi prompt?</h2>
+  <p>Join the network <code>zehnder-comfoair-xxxxxx</code> from your phone; a setup page opens. The setup window closes ten minutes after power-on; unplug and replug to reopen it.</p>
+
+  <h2>Afterwards</h2>
+  <p>In the ESPHome dashboard, choose <em>Adopt</em> on the discovered device to get updates from this project. Source, pinout and changelog: <a href="https://github.com/JoooostB/esphome-zehnder-comfoair-rf">github.com/JoooostB/esphome-zehnder-comfoair-rf</a>.</p>
+  <p><small>Hardware by JoooostB on <a href="https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assistant-controller/">Tindie</a>. Runs locally; no cloud.</small></p>
+</main>
+<script>
+  fetch('manifest.json').then(r=>r.json()).then(m=>{document.getElementById('v').textContent='v'+m.version}).catch(()=>{});
+</script>
+</body>
+</html>

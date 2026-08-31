@@ -1,0 +1,95 @@
+name: Release firmware
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  TEMPLATE: zehnder-comfoair-rf.yaml
+  DEVICE: zehnder-comfoair
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — template must be secret-free and version-consistent
+        run: |
+          set -e
+          ! grep -nE '!secret|manual_ip|static_ip|timezone:|key:|password:' "$TEMPLATE" \
+            || { echo "::error::house-specific value in release template"; exit 1; }
+          ver=$(grep -E '^\s*project_version:' "$TEMPLATE" | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "project_version=$ver" >> "$GITHUB_ENV"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            [[ "$GITHUB_REF_NAME" == "v$ver" ]] \
+              || { echo "::error::tag $GITHUB_REF_NAME != v$ver"; exit 1; }
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install ESPHome
+        run: pip install --upgrade esphome
+
+      - name: Build
+        run: esphome compile "$TEMPLATE"
+
+      - name: Collect artifacts
+        run: |
+          set -e
+          mkdir -p site/firmware
+          cp -r docs/. site/
+          bin=$(find .esphome/build -name firmware.factory.bin | head -n1)
+          [[ -n "$bin" ]] || { echo "::error::factory bin not found"; exit 1; }
+          cp "$bin" "site/firmware/${DEVICE}-${project_version}.factory.bin"
+          cat > site/manifest.json <<JSON
+          {
+            "name": "Zehnder ComfoAir RF controller",
+            "version": "${project_version}",
+            "home_assistant_domain": "esphome",
+            "new_install_prompt_erase": true,
+            "new_install_improv_wait_time": 20,
+            "builds": [
+              {
+                "chipFamily": "ESP32",
+                "parts": [ { "path": "firmware/${DEVICE}-${project_version}.factory.bin", "offset": 0 } ]
+              }
+            ]
+          }
+          JSON
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: site/firmware/*.bin
+
+      - uses: actions/upload-pages-artifact@v3
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          path: site
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: site/firmware/*.bin
+          generate_release_notes: true
+
+  deploy-pages:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

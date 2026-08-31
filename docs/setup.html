@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zehnder ComfoAir controller connected</title>
+<style>
+  body{margin:0;font:17px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1d2a33}
+  main{max-width:38rem;margin:0 auto;padding:3rem 1.25rem}
+  h1{font-size:1.7rem;margin:0 0 1rem}
+  code{background:#eaf3f7;padding:.1rem .35rem;border-radius:3px}
+  a{color:#0d6e8f}
+</style>
+</head>
+<body>
+<main>
+  <h1>The board is on your Wi-Fi</h1>
+  <p id="who"></p>
+  <ol>
+    <li>Open Home Assistant → Settings → Devices &amp; services. It shows a new ESPHome device; add it.</li>
+    <li>Open the ESPHome dashboard, choose <em>Adopt</em> on the discovered device.</li>
+    <li>Set fan speed with the <em>Fan speed</em> selector on the device page.</li>
+  </ol>
+  <p><a href="https://my.home-assistant.io/redirect/config_flow_start?domain=esphome">Open the Home Assistant setup flow</a></p>
+</main>
+<script>
+  const q=new URLSearchParams(location.search);
+  const n=q.get('name'),ip=q.get('ip');
+  if(n||ip){document.getElementById('who').innerHTML='Device <code>'+(n||'')+'</code>'+(ip?' at <code>'+ip+'</code>':'')+'.';}
+</script>
+</body>
+</html>

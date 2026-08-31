@@ -1,0 +1,13 @@
+# AI session leftovers — never commit
+mnt/
+.claude/
+
+# Local secrets (dev only; see secrets.yaml.example)
+secrets.yaml
+
+# ESPHome build output
+.esphome/
+__pycache__/
+
+# OS noise
+.DS_Store
