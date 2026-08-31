@@ -21,9 +21,11 @@ esphome:
     version: ${project_version}
 
 esp32:
-  board: esp32dev
+  board: esp32doit-devkit-v1
   framework:
-    type: esp-idf          # Decided 2026-08-31: both frameworks compile; esp-idf is ~42 KB smaller (see HANDOFF item 2)
+    type: arduino          # Same framework and board as the proven shipped config. An esp-idf
+                           # build compiled but failed on real hardware (no WTW control after
+                           # flashing, 2026-08-31); do not switch without a bench test.
 
 # UART0 at the default baud rate is what improv_serial listens on; leave baud_rate alone.
 logger:
