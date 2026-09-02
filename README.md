@@ -16,13 +16,16 @@ Hardware: https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assista
 your Zehnder ventilation unit, as close to its display panel as possible. Elsewhere in
 the house it will likely not reach the unit.
 
-1. Power the board. Wait 10 seconds.
-2. Open the Home Assistant app → Settings → Devices & services. The board appears as
+1. Put the ventilation unit in pairing mode: pull its mains plug, wait 5 seconds,
+   plug it back in. It accepts new connections for 10 minutes after power-on.
+2. Power the board. It pairs with the ventilation unit by itself within a minute;
+   the pairing is stored permanently.
+3. Open the Home Assistant app → Settings → Devices & services. The board appears as
    **Zehnder ComfoAir**. Tap it and enter your Wi-Fi.
    No Bluetooth? Join the Wi-Fi network `zehnder-comfoair-xxxxxx` from your phone; a
    setup page opens.
-3. Home Assistant shows "New device discovered". Add it.
-4. Optional but recommended: in the ESPHome dashboard, click **Adopt** on the discovered
+4. Home Assistant shows "New device discovered". Add it.
+5. Optional but recommended: in the ESPHome dashboard, click **Adopt** on the discovered
    device. You'll get updates from this repository with one click.
 
 The setup window closes 10 minutes after power-on. Power-cycle to reopen it.

@@ -15,6 +15,9 @@
      so the block does not rely on colour alone. */
   .warn{background:#fdf4e3;border-left:4px solid #8a5a00;padding:1rem 1.25rem;margin:0 0 1.5rem}
   .warn p{margin:0}
+  /* Safe because each language sits in its own wrapper, so p+p never pairs a
+     visible paragraph with the hidden other-language one. */
+  .warn p+p{margin-top:.6rem}
   .warn strong{color:#8a5a00}
 
   /* Language switch. Only the inactive language is hidden, so the page still
@@ -130,8 +133,14 @@
   <p id="who"></p>
 
   <div class="warn">
-    <p data-lang="nl" lang="nl"><strong>Belangrijk:</strong> het bereik van de radio is erg klein. Leg deze unit bovenop je Zehnder WTW-unit, zo dicht mogelijk bij het display.</p>
-    <p data-lang="en" lang="en"><strong>Important:</strong> the radio range is very short. Place this unit on top of your Zehnder ventilation unit, as close to its display panel as possible.</p>
+    <div data-lang="nl" lang="nl">
+      <p><strong>Belangrijk:</strong> het bereik van de radio is erg klein. Leg deze unit bovenop je Zehnder WTW-unit, zo dicht mogelijk bij het display.</p>
+      <p>Eerste keer? Zet de WTW in koppelstand: trek de stekker van de WTW eruit, wacht 5 seconden en steek hem er weer in. De controller koppelt daarna binnen een minuut vanzelf.</p>
+    </div>
+    <div data-lang="en" lang="en">
+      <p><strong>Important:</strong> the radio range is very short. Place this unit on top of your Zehnder ventilation unit, as close to its display panel as possible.</p>
+      <p>First time here? Put the ventilation unit in pairing mode: pull its mains plug, wait 5 seconds and plug it back in. The controller then pairs by itself within a minute.</p>
+    </div>
   </div>
 
   <ol data-lang="nl" lang="nl">
