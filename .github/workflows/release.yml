@@ -40,8 +40,12 @@ jobs:
       - name: Install ESPHome
         run: pip install esphome==2026.8.2
 
+      # Build from the components in this checkout. The template points at
+      # @v${project_version}, which does not exist yet on a PR or before the tag push.
       - name: Build
-        run: esphome compile "$TEMPLATE"
+        run: |
+          printf '<<: !include %s\n\nexternal_components:\n  - source:\n      type: local\n      path: components\n' "$TEMPLATE" > ci.yaml
+          esphome compile ci.yaml
 
       - name: Collect firmware
         run: |
