@@ -1,12 +1,14 @@
 name: Deploy pages
 
 # Docs-only deploy: rebuilds the Pages site with the firmware from the existing
-# GitHub Release, no ESPHome compile. Firmware itself only changes via release.yml.
+# GitHub Releases, no ESPHome compile. Firmware itself only changes via release.yml.
+# The root manifest always comes from the newest stable release, so a pre-release
+# project_version on main never reaches the regular flash page.
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['docs/**']
+    paths: ['docs/**', '.github/scripts/**', '.github/workflows/pages.yml']
 
 permissions:
   contents: read
@@ -18,7 +20,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TEMPLATE: zehnder-comfoair-rf.yaml
   DEVICE: zehnder-comfoair
 
 jobs:
@@ -33,29 +34,8 @@ jobs:
       - name: Assemble site with released firmware
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -e
-          ver=$(grep -E '^\s*project_version:' "$TEMPLATE" | sed -E 's/.*"([^"]+)".*/\1/')
-          mkdir -p site/firmware
-          cp -r docs/. site/
-          gh release download "v$ver" --pattern '*.factory.bin' --dir site/firmware
-          [[ -f "site/firmware/${DEVICE}-${ver}.factory.bin" ]] \
-            || { echo "::error::release v$ver has no ${DEVICE}-${ver}.factory.bin asset"; exit 1; }
-          cat > site/manifest.json <<JSON
-          {
-            "name": "Zehnder ComfoAir RF controller",
-            "version": "${ver}",
-            "home_assistant_domain": "esphome",
-            "new_install_prompt_erase": true,
-            "new_install_improv_wait_time": 20,
-            "builds": [
-              {
-                "chipFamily": "ESP32",
-                "parts": [ { "path": "firmware/${DEVICE}-${ver}.factory.bin", "offset": 0 } ]
-              }
-            ]
-          }
-          JSON
+          GH_REPO: ${{ github.repository }}
+        run: .github/scripts/assemble-site.sh
 
       - uses: actions/upload-pages-artifact@v5
         with:

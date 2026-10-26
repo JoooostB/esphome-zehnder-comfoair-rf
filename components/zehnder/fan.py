@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import fan
-from esphome.const import CONF_ID, CONF_UPDATE_INTERVAL
+from esphome.const import CONF_CHANNEL, CONF_ID, CONF_UPDATE_INTERVAL
 
 from esphome.components.nrf905 import nRF905Component
 
@@ -20,6 +20,7 @@ CONFIG_SCHEMA = (
         {
             cv.Required(CONF_NRF905): cv.use_id(nRF905Component),
             cv.Optional(CONF_UPDATE_INTERVAL, default="30s"): cv.update_interval,
+            cv.Optional(CONF_CHANNEL, default=118): cv.int_range(min=0, max=511),
         }
     )
 )
@@ -34,3 +35,4 @@ async def to_code(config):
     cg.add(var.set_rf(nrf905))
 
     cg.add(var.set_update_interval(config[CONF_UPDATE_INTERVAL]))
+    cg.add(var.set_channel(config[CONF_CHANNEL]))

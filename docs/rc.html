@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Test version of the Zehnder ComfoAir controller firmware</title>
+<style>
+  :root{--ink:#1d2a33;--mute:#5d6e78;--line:#c9d6dd;--air:#eaf3f7;--act:#0d6e8f;
+        --warn:#8a5a00;--warnbg:#fdf4e3}
+  *{box-sizing:border-box}
+  body{margin:0;font:17px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#fff}
+  main{max-width:38rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+  h1{font-size:1.9rem;line-height:1.15;margin:0 0 .5rem;font-weight:650}
+  p.lead{color:var(--mute);margin:0 0 2rem}
+  ol{padding-left:1.4rem;margin:0 0 2rem}
+  li{margin:.35rem 0}
+  code{background:var(--air);padding:.1rem .35rem;border-radius:3px}
+  .flash{background:var(--air);border-left:4px solid var(--act);padding:1.25rem 1.25rem 1rem;margin:0 0 2rem}
+  .flash p{margin:0 0 .75rem}
+  /* Warning block: same accent-block shape as .flash, warm accent to set it apart.
+     The bold label carries the meaning as text, so it does not rely on colour. */
+  .warn{background:var(--warnbg);border-left:4px solid var(--warn);padding:1rem 1.25rem;margin:0 0 2rem}
+  .warn p{margin:0}
+  /* Safe because each language sits in its own wrapper, so p+p never pairs a
+     visible paragraph with the hidden other-language one. */
+  .warn p+p{margin-top:.6rem}
+  .warn strong{color:var(--warn)}
+  esp-web-install-button{--esp-tools-button-color:var(--act);--esp-tools-button-text-color:#fff;--esp-tools-button-border-radius:4px}
+  small{color:var(--mute)}
+  a{color:var(--act)}
+  h2{font-size:1.1rem;margin:2rem 0 .5rem}
+
+  /* Language switch. Only the inactive language is hidden, so the page still
+     shows English (the source default) when JavaScript does not run.
+     display:none keeps the hidden copy out of the accessibility tree. */
+  html[data-lang="nl"] [data-lang="en"],
+  html[data-lang="en"] [data-lang="nl"]{display:none}
+
+  .langbar{display:flex;justify-content:flex-end;margin:-1.25rem 0 1rem}
+  .langswitch{display:flex;align-items:center;gap:.1rem}
+  .langswitch button{font:inherit;font-size:.8125rem;font-weight:600;letter-spacing:.03em;
+    min-width:2.75rem;min-height:2.75rem;padding:0 .4rem;border:0;border-radius:4px;
+    background:none;color:var(--mute);cursor:pointer}
+  /* Active state is not colour alone: it also gets a tint and an underline. */
+  .langswitch button[aria-pressed="true"]{color:var(--act);background:var(--air);
+    text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+  .langswitch button[aria-pressed="false"]:hover{color:var(--ink)}
+  .langswitch button:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+  .langswitch .sep{color:var(--line)}
+</style>
+<script>
+(function(){
+  var KEY='zcr-lang';
+  var TITLES={
+    nl:'Testversie van de Zehnder ComfoAir controller firmware',
+    en:'Test version of the Zehnder ComfoAir controller firmware'
+  };
+  var GROUP={nl:'Taal',en:'Language'};
+
+  function stored(){
+    try{var v=localStorage.getItem(KEY);return (v==='nl'||v==='en')?v:null}catch(e){return null}
+  }
+  /* English is the default. A browser that lists Dutch anywhere in its preferences gets Dutch. */
+  function detect(){
+    var list=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||''];
+    for(var i=0;i<list.length;i++){
+      if(String(list[i]).toLowerCase().indexOf('nl')===0){return 'nl'}
+    }
+    return 'en';
+  }
+  function apply(lang){
+    var d=document.documentElement;
+    d.lang=lang;
+    d.setAttribute('data-lang',lang);
+    document.title=TITLES[lang];
+    var group=document.getElementById('langgroup');
+    if(group){group.setAttribute('aria-label',GROUP[lang])}
+    var btns=document.querySelectorAll('[data-set-lang]');
+    for(var j=0;j<btns.length;j++){
+      btns[j].setAttribute('aria-pressed',btns[j].getAttribute('data-set-lang')===lang?'true':'false');
+    }
+  }
+
+  var current=stored()||detect();
+  apply(current);
+
+  document.addEventListener('DOMContentLoaded',function(){
+    apply(current);
+    var btns=document.querySelectorAll('[data-set-lang]');
+    for(var k=0;k<btns.length;k++){
+      btns[k].addEventListener('click',function(){
+        current=this.getAttribute('data-set-lang');
+        try{localStorage.setItem(KEY,current)}catch(e){}
+        apply(current);
+      });
+    }
+  });
+})();
+</script>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</head>
+<body>
+<main>
+  <div class="langbar">
+    <div class="langswitch" id="langgroup" role="group" aria-label="Language">
+      <button type="button" data-set-lang="nl" aria-pressed="false">NL</button>
+      <span class="sep" aria-hidden="true">|</span>
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+    </div>
+  </div>
+
+  <h1 data-lang="nl" lang="nl">Testversie van de firmware</h1>
+  <h1 data-lang="en" lang="en">Test version of the firmware</h1>
+
+  <div class="warn">
+    <div data-lang="nl" lang="nl">
+      <p><strong>Let op:</strong> dit is een testversie. Er kunnen nog fouten in zitten. Installeer hem alleen als je gevraagd bent om te helpen testen. Voor normaal gebruik installeer je de stabiele versie via de <a href="./">gewone installatiepagina</a>.</p>
+    </div>
+    <div data-lang="en" lang="en">
+      <p><strong>Note:</strong> this is a test version. It may still have bugs. Only install it if you were asked to help test it. For normal use, install the stable version from the <a href="./">regular install page</a>.</p>
+    </div>
+  </div>
+
+  <!-- Shown when rc/manifest.json exists, which the deploy only writes when the
+       newest pre-release is newer than the newest stable release. -->
+  <div id="has-rc" hidden>
+    <ol data-lang="nl" lang="nl">
+      <li>Gebruik Chrome of Edge op een laptop of desktop.</li>
+      <li>Sluit het board aan met een USB-datakabel.</li>
+      <li>Klik op <em>Install</em>, kies de seriële poort en laat het tabblad open staan.</li>
+      <li>Vul je wifigegevens in als daar om gevraagd wordt.</li>
+    </ol>
+    <ol data-lang="en" lang="en">
+      <li>Use Chrome or Edge on a laptop or desktop.</li>
+      <li>Connect the board with a USB data cable.</li>
+      <li>Press <em>Install</em>, pick the serial port, and keep the tab open.</li>
+      <li>When asked, enter your Wi-Fi.</li>
+    </ol>
+
+    <div class="flash">
+      <p><span data-lang="nl" lang="nl">Testversie</span><span data-lang="en" lang="en">Test version</span> <span id="rcv"></span></p>
+      <esp-web-install-button manifest="rc/manifest.json">
+        <span slot="unsupported">
+          <span data-lang="nl" lang="nl">Deze browser kan niet bij de seriële poort. Gebruik Chrome of Edge op een computer.</span>
+          <span data-lang="en" lang="en">Your browser can't talk to serial ports. Use Chrome or Edge on a computer.</span>
+        </span>
+        <span slot="not-allowed">
+          <span data-lang="nl" lang="nl">Open deze pagina via https.</span>
+          <span data-lang="en" lang="en">Open this page over https.</span>
+        </span>
+      </esp-web-install-button>
+    </div>
+  </div>
+
+  <div id="no-rc" hidden>
+    <p data-lang="nl" lang="nl">Er is op dit moment geen testversie. Gebruik de <a href="./">gewone installatiepagina</a>.</p>
+    <p data-lang="en" lang="en">There is no test version right now. Use the <a href="./">regular install page</a>.</p>
+  </div>
+
+  <div class="warn">
+    <p data-lang="nl" lang="nl"><strong>Belangrijk:</strong> het bereik van de radio is erg klein. Leg deze unit bovenop je Zehnder WTW-unit, zo dicht mogelijk bij het display.</p>
+    <p data-lang="en" lang="en"><strong>Important:</strong> the radio range is very short. Place this unit on top of your Zehnder ventilation unit, as close to its display panel as possible.</p>
+  </div>
+
+  <h2 data-lang="nl" lang="nl">Terug naar de stabiele versie</h2>
+  <h2 data-lang="en" lang="en">Going back to the stable version</h2>
+
+  <p data-lang="nl" lang="nl">Installeer de stabiele firmware via de <a href="./">gewone installatiepagina</a> en volg de stappen op die pagina.</p>
+  <p data-lang="en" lang="en">Install the stable firmware from the <a href="./">regular install page</a> and follow the steps there.</p>
+
+  <p data-lang="nl" lang="nl">Heb je het apparaat in het ESPHome dashboard geadopteerd? Zet dan in de YAML de versie achter de <code>@</code> in de regel met <code>github://JoooostB/esphome-zehnder-comfoair-rf</code> terug naar <code class="stable-tag">de stabiele versie</code> en klik op <em>Install</em>.</p>
+  <p data-lang="en" lang="en">Adopted the device in the ESPHome dashboard? In its YAML, set the version after the <code>@</code> in the line with <code>github://JoooostB/esphome-zehnder-comfoair-rf</code> back to <code class="stable-tag">the stable version</code> and press <em>Install</em>.</p>
+
+  <p><small data-lang="nl" lang="nl">Hardware van JoooostB op <a href="https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assistant-controller/">Tindie</a>. Broncode en changelog: <a href="https://github.com/JoooostB/esphome-zehnder-comfoair-rf">github.com/JoooostB/esphome-zehnder-comfoair-rf</a>.</small><small data-lang="en" lang="en">Hardware by JoooostB on <a href="https://www.tindie.com/products/joooostb/zehnder-comfoair-home-assistant-controller/">Tindie</a>. Source and changelog: <a href="https://github.com/JoooostB/esphome-zehnder-comfoair-rf">github.com/JoooostB/esphome-zehnder-comfoair-rf</a>.</small></p>
+</main>
+<script>
+  function getManifest(path){
+    return fetch(path,{cache:'no-store'}).then(function(r){if(!r.ok){throw new Error(r.status)}return r.json()});
+  }
+  getManifest('rc/manifest.json').then(function(m){
+    document.getElementById('rcv').textContent='v'+m.version;
+    document.getElementById('has-rc').hidden=false;
+  }).catch(function(){
+    document.getElementById('no-rc').hidden=false;
+  });
+  getManifest('manifest.json').then(function(m){
+    var els=document.querySelectorAll('.stable-tag');
+    for(var i=0;i<els.length;i++){els[i].textContent='v'+m.version}
+  }).catch(function(){});
+</script>
+</body>
+</html>
