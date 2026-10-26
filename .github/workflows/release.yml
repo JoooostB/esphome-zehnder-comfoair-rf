@@ -40,37 +40,35 @@ jobs:
       - name: Install ESPHome
         run: pip install esphome==2026.8.2
 
+      # Build from the components in this checkout. The template points at
+      # @v${project_version}, which does not exist yet on a PR or before the tag push.
       - name: Build
-        run: esphome compile "$TEMPLATE"
+        run: |
+          printf '<<: !include %s\n\nexternal_components:\n  - source:\n      type: local\n      path: components\n' "$TEMPLATE" > ci.yaml
+          esphome compile ci.yaml
 
-      - name: Collect artifacts
+      - name: Collect firmware
         run: |
           set -e
-          mkdir -p site/firmware
-          cp -r docs/. site/
+          mkdir -p dist
           bin=$(find .esphome/build -name firmware.factory.bin | head -n1)
           [[ -n "$bin" ]] || { echo "::error::factory bin not found"; exit 1; }
-          cp "$bin" "site/firmware/${DEVICE}-${project_version}.factory.bin"
-          cat > site/manifest.json <<JSON
-          {
-            "name": "Zehnder ComfoAir RF controller",
-            "version": "${project_version}",
-            "home_assistant_domain": "esphome",
-            "new_install_prompt_erase": true,
-            "new_install_improv_wait_time": 20,
-            "builds": [
-              {
-                "chipFamily": "ESP32",
-                "parts": [ { "path": "firmware/${DEVICE}-${project_version}.factory.bin", "offset": 0 } ]
-              }
-            ]
-          }
-          JSON
+          cp "$bin" "dist/${DEVICE}-${project_version}.factory.bin"
 
       - uses: actions/upload-artifact@v7
         with:
           name: firmware
-          path: site/firmware/*.bin
+          path: dist/*.bin
+
+      # Builds both channels: this tag's fresh bin plus the other channel's bin
+      # from its GitHub Release. Same script as pages.yml.
+      - name: Assemble site
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          LOCAL_TAG: ${{ github.ref_name }}
+        run: LOCAL_BIN="dist/${DEVICE}-${project_version}.factory.bin" .github/scripts/assemble-site.sh
 
       - uses: actions/upload-pages-artifact@v5
         if: startsWith(github.ref, 'refs/tags/v')
@@ -80,13 +78,18 @@ jobs:
       - uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: site/firmware/*.bin
+          files: dist/*.bin
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ !contains(github.ref_name, '-') }}
 
   deploy-pages:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

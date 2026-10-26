@@ -9,7 +9,7 @@
 substitutions:
   name: zehnder-comfoair
   friendly_name: Zehnder ComfoAir
-  project_version: "1.0.0"
+  project_version: "1.0.1-rc.1"
 
 esphome:
   name: ${name}
@@ -94,6 +94,7 @@ fan:
     name: Ventilation
     nrf905: nrf905_rf
     update_interval: 60s
+    # Optional `channel:` (nRF905 channel, default 118 = 868.4 MHz).
 
 # ---------------------------------------------------------------------------
 # Buyer-facing housekeeping

@@ -99,11 +99,10 @@ void ZehnderRF::setup() {
 
   // Set nRF905 config
   nrf905::Config rfConfig;
-  this->rf_->spi_setup();
   rfConfig = this->rf_->getConfig();
 
   rfConfig.band = true;
-  rfConfig.channel = 118;
+  rfConfig.channel = this->channel_;
 
   // // CRC 16
   rfConfig.crc_enable = true;
@@ -153,6 +152,7 @@ void ZehnderRF::setup() {
 void ZehnderRF::dump_config(void) {
   ESP_LOGCONFIG(TAG, "Zehnder Fan config:");
   ESP_LOGCONFIG(TAG, "  Polling interval   %u", this->interval_);
+  ESP_LOGCONFIG(TAG, "  RF channel         %u", this->channel_);
   ESP_LOGCONFIG(TAG, "  Fan networkId      0x%08X", this->config_.fan_networkId);
   ESP_LOGCONFIG(TAG, "  Fan my device type 0x%02X", this->config_.fan_my_device_type);
   ESP_LOGCONFIG(TAG, "  Fan my device id   0x%02X", this->config_.fan_my_device_id);

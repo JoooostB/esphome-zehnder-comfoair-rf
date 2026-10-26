@@ -36,7 +36,7 @@ void nRF905::setup() {
   this->readConfigRegisters();
 
   this->_config.band = true;
-  this->_config.channel = 117;
+  this->_config.channel = 118;
 
   // CRC 16
   this->_config.crc_enable = true;

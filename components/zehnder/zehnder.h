@@ -67,6 +67,8 @@ class ZehnderRF : public Component, public fan::Fan {
 
   void set_update_interval(const uint32_t interval) { interval_ = interval; }
 
+  void set_channel(const uint16_t channel) { channel_ = channel; }
+
   void dump_config() override;
 
   fan::FanTraits get_traits() override;
@@ -111,6 +113,7 @@ class ZehnderRF : public Component, public fan::Fan {
 
   nrf905::nRF905 *rf_;
   uint32_t interval_;
+  uint16_t channel_{118};
 
   uint8_t _txFrame[FAN_FRAMESIZE];
 
