@@ -38,7 +38,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install ESPHome
-        run: pip install esphome==2026.8.2
+        run: pip install esphome==2026.10.2
 
       # Build from the components in this checkout. The template points at
       # @v${project_version}, which does not exist yet on a PR or before the tag push.
